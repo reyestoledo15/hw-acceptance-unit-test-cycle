@@ -1,7 +1,8 @@
 class MoviesController < ApplicationController
+include MoviesHelper
 
   def movie_params
-    params.require(:movie).permit(:title, :rating, :description, :release_date)
+    params.require(:movie).permit(:title, :rating, :description, :release_date, :director)
   end
 
   def show
@@ -14,9 +15,9 @@ class MoviesController < ApplicationController
     sort = params[:sort] || session[:sort]
     case sort
     when 'title'
-      ordering,@title_header = {:title => :asc}, 'bg-warning hilite'
+      ordering,@title_header = {:title => :asc}, 'hilite'
     when 'release_date'
-      ordering,@date_header = {:release_date => :asc}, 'bg-warning hilite'
+      ordering,@date_header = {:release_date => :asc}, 'hilite'
     end
     @all_ratings = Movie.all_ratings
     @selected_ratings = params[:ratings] || session[:ratings] || {}
@@ -61,4 +62,14 @@ class MoviesController < ApplicationController
     redirect_to movies_path
   end
 
+  def search
+    @similar_movies = Movie.similar_movies(params[:title])
+    if @similar_movies.nil?
+      flash[:warning]="'#{params[:title]}' has no director info"
+      redirect_to root_url
+    end
+    @movie = Movie.find_by(title: params[:title])
+  end
+
 end
+
